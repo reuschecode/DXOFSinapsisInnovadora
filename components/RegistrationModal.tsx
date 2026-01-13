@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useLanguage } from '../LanguageContext';
+import { sendEmail } from '../emailService';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -8,13 +9,27 @@ interface RegistrationModalProps {
 }
 
 const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose }) => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = {
+      id: formData.get('id') as string,
+      email: formData.get('email') as string,
+      magnitude: formData.get('magnitude') as string
+    };
+
+    try {
+      await sendEmail(data, lang);
+    } catch (error) {
+      console.error('Error sending email:', error);
+    }
+
     setSubmitted(true);
     setTimeout(() => {
         onClose();
@@ -61,6 +76,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose }
                     <input 
                       required 
                       type="text" 
+                      name="id"
                       placeholder={t('registration', 'placeholder_id')} 
                       className="w-full bg-white/5 border-b border-white/20 p-4 text-xl md:text-2xl font-bold uppercase tracking-tight focus:border-red-600 focus:outline-none transition-all focus:bg-white/10"
                     />
@@ -70,6 +86,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose }
                     <input 
                       required 
                       type="email" 
+                      name="email"
                       placeholder={t('registration', 'placeholder_link')} 
                       className="w-full bg-white/5 border-b border-white/20 p-4 text-xl md:text-2xl font-bold uppercase tracking-tight focus:border-red-600 focus:outline-none transition-all focus:bg-white/10"
                     />
@@ -78,7 +95,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose }
 
                 <div className="space-y-3 group">
                   <label className="text-mono text-xs uppercase font-bold opacity-40 group-focus-within:opacity-100 group-focus-within:text-red-600 transition-all tracking-widest">{t('registration', 'label_magnitude')}</label>
-                  <select className="w-full bg-white/5 border-b border-white/20 p-4 text-xl md:text-2xl font-bold uppercase tracking-tight focus:border-red-600 focus:outline-none transition-all appearance-none">
+                  <select name="magnitude" className="w-full bg-white/5 border-b border-white/20 p-4 text-xl md:text-2xl font-bold uppercase tracking-tight focus:border-red-600 focus:outline-none transition-all appearance-none">
                     <option className="bg-black">{t('registration', 'mag_1')}</option>
                     <option className="bg-black">{t('registration', 'mag_2')}</option>
                     <option className="bg-black">{t('registration', 'mag_3')}</option>
